@@ -14,34 +14,22 @@ This project is a gamified approach to fostering discipline within the household
 ## ✨ Key Features
 
 ### 👤 User Dashboard
+![User Dashboard](screenshots/UserPage.png)
 * **Real-time Balance:** Displays current total points instantly.
 * **Transaction History:** A detailed log of all point earnings and redemptions.
 * **Multi-Task Selection:** Users can select and submit multiple task requests in a single batch to streamline the process.
+![Multi-Task Selection](screenshots/User-SelectTaskPage.png)
 
 ### 🎁 Dynamic Reward System
 * **Card-based UI:** A modern interface showcasing all available rewards.
 * **Smart Logic:** Automatically calculates point sufficiency, toggling between a **"Claim!"** button and a **"Need more points"** status indicator.
+![Reward System](screenshots/User-RewardPage.png)
 
 ### 🔐 Advanced Admin Panel
 * **Bulk Approval System:** Admins can approve or reject multiple point requests simultaneously using "Select All" functionality.
 * **Individual Child Management:** * View specific profiles and current balances.
     * **Penalty System:** Deduct points for misbehavior with a mandatory "reason for log" requirement for transparency.
 * **Responsive UI:** Fully optimized for a seamless experience on both **Desktop and Mobile** devices.
-
-* **User Dashboard:**
-* 
-![User Dashboard](screenshots/UserPage.png)
-
-* **Multi-Task Selection:**
-* 
-![Multi-Task Selection](screenshots/User-SelectTaskPage.png)
-
-* **Dynamic Reward System:**
-* 
-![Reward System](screenshots/User-RewardPage.png)
-
-* **Advanced Admin Panel:**
-* 
 ![Admin Panel](screenshots/AdminPanelPage.png)
 
 ---
