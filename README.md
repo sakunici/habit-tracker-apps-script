@@ -7,6 +7,8 @@ A behavior management and reward system designed for families, built with **Goog
 ## 🌟 Overview
 This project is a gamified approach to fostering discipline within the household. Users (children) earn points by completing assigned tasks, which can then be redeemed for rewards. The system features a centralized **Admin Panel** for parents to manage points, approve multiple requests at once, and track progress efficiently.
 
+### 🔑 Access Control
+![Login Screen](screenshots/LoginPage.png)
 ---
 
 ## ✨ Key Features
@@ -26,6 +28,17 @@ This project is a gamified approach to fostering discipline within the household
     * **Penalty System:** Deduct points for misbehavior with a mandatory "reason for log" requirement for transparency.
 * **Responsive UI:** Fully optimized for a seamless experience on both **Desktop and Mobile** devices.
 
+* **User Dashboard:**
+![User Dashboard](screenshots/UserPage.png)
+
+* **Multi-Task Selection:**
+![Multi-Task Selection](screenshots/User-SelectTaskPage.png)
+
+* **Dynamic Reward System:**
+![Reward System](screenshots/User-RewardPage.png)
+
+* **Advanced Admin Panel:**
+![Admin Panel](screenshots/AdminPanelPage.png)
 ---
 
 ## 🚀 Tech Stack
