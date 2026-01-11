@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); height: fit-content; }
+        h1 { text-align: center; color: #764ba2; margin-bottom: 25px; }
+        h2, h3 { color: #333; margin: 20px 0 15px 0; }
+        .dashboard { display: none; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: 500; }
+        input, select { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; }
+        
+        /* ปุ่มและสถานะ */
+        .btn { width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+        .btn-info { background: #17a2b8; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-purple { background: #8e44ad; }
+        .btn-outline { background: transparent; border: 1px solid #ccc; color: #666; font-size: 13px; padding: 5px 12px; width: auto; margin-top: 0; border-radius: 5px; }
+        
+        /* คะแนน */
+        .points-box { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 15px; text-align: center; margin: 20px 0; }
+        .points-number { font-size: 48px; font-weight: bold; }
+        
+        /* การ์ดรายการ */
+        .item-card { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; gap: 15px; }
+        .item-info { flex: 1; min-width: 0; } /* ช่วยให้ข้อความยาวไม่ดันปุ่ม */
+        .item-info strong { display: block; word-wrap: break-word; color: #333; }
+        .item-info small { color: #666; font-size: 12px; }
+
+        .pending-item { background: #fff3cd; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #ffc107; }
+        .pending-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .pending-actions { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+        .checkbox-large { width: 22px; height: 22px; cursor: pointer; }
+        
+        .child-card { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 12px; cursor: pointer; text-align: center; border: 1px solid #eee; transition: 0.3s; }
+        .child-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .error-msg { color: #dc3545; text-align: center; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loginScreen">
+            <h1>🏆 Habit Tracker 🏆</h1>
+            <div class="form-group">
+                <label>Select User:</label>
+                <select id="userId">
+                    <option value="">-- Choose --</option>
+                    <option value="U001">🦁 AA</option>
+                    <option value="U002">😺 BB</option>
+                    <option value="U003">🐼 CC</option>
+                    <option value="P001">👩 Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="password">
+            </div>
+            <button class="btn btn-info" style="background:#764ba2" onclick="handleLogin()">Login</button>
+            <div class="error-msg" id="errorMsg"></div>
+        </div>
+
+        <div id="childDashboard" class="dashboard">
+            <div style="text-align: center; font-size: 60px;" id="childAvatar"></div>
+            <h2 id="childName" style="text-align: center;"></h2>
+            <div class="points-box">
+                <div class="points-number" id="childPoints">0</div>
+                <div>Total Points</div>
+            </div>
+            <button class="btn btn-success" onclick="showTasksModal()">➕ Add Points (Request)</button>
+            <button class="btn btn-warning" onclick="showRewardsModal()">🎁 View Rewards</button>
+            <button class="btn btn-info" onclick="showHistoryModal()">📊 History</button>
+            <button class="btn btn-danger" onclick="logout()">Logout</button>
+        </div>
+
+        <div id="parentDashboard" class="dashboard">
+            <h2 style="text-align:center;">👩 Admin Panel</h2>
+            <div id="adminPendingSection">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                    <h3>Pending Approval</h3>
+                    <button class="btn btn-outline" onclick="loadPendingRequests()">🔄 Refresh</button>
+                </div>
+                <div style="margin: 10px 0; display: flex; gap: 8px;">
+                    <button class="btn btn-outline" onclick="selectAllPending(true)">Select All</button>
+                    <button class="btn btn-outline" onclick="selectAllPending(false)">Deselect All</button>
+                </div>
+                <div id="pendingList"></div>
+                <button id="approveBtn" class="btn btn-success" onclick="approveSelectedRequests()" disabled>
+                   ✅ Approve Selected (<span id="selectedCountBadge">0</span>)
+                </button>
+            </div>
+
+            <div id="adminManageSection">
+                <h3 id="manageTitle" style="margin-top:25px;">Select Child to Manage:</h3>
+                <div id="childrenList"></div>
+                
+                <div id="selectedChildInfo" style="display:none;">
+                    <div class="points-box">
+                        <div id="manageChildName" style="font-weight:bold;">Managing</div>
+                        <div class="points-number" id="manageChildPoints">0</div>
+                        <div>Current Points</div>
+                    </div>
+                    <button class="btn btn-info" onclick="backToChildSelection()">👥 Select Another Child</button>
+                    <button class="btn btn-purple" onclick="showChildHistoryAdmin()">📊 View History</button>
+                    
+                    <h3 style="margin-top:20px;">Deduct Points (for misbehavior):</h3>
+                    <input type="number" id="deductAmount" placeholder="Points to deduct">
+                    <input type="text" id="deductReason" placeholder="Reason for deduction">
+                    <button class="btn btn-danger" onclick="handleDeductPoints()">❌ Deduct Points</button>
+                </div>
+            </div>
+            <button class="btn btn-danger" style="margin-top:30px;" onclick="logout()">Logout</button>
+        </div>
+
+        <div id="tasksModal" class="dashboard">
+            <h2>📝 Select Tasks</h2>
+            <div id="tasksList"></div>
+            <button class="btn btn-success" id="requestTasksBtn" onclick="submitMultipleTasks()" style="display:none;">🚀 Request Selected Tasks</button>
+            <button class="btn btn-info" onclick="backToDashboard()">Back</button>
+        </div>
+
+        <div id="rewardsModal" class="dashboard">
+            <h2>🎁 Rewards</h2>
+            <div id="rewardsList"></div>
+            <button class="btn btn-info" onclick="backToDashboard()">Back</button>
+        </div>
+
+        <div id="historyModal" class="dashboard">
+            <h2>📊 History</h2>
+            <div id="historyList"></div>
+            <button class="btn btn-info" onclick="backToDashboard()">Back</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let selectedChildId = null;
+
+        function handleLogin() {
+            const id = document.getElementById('userId').value;
+            const pass = document.getElementById('password').value;
+            google.script.run.withSuccessHandler(res => {
+                if (res.success) {
+                    currentUser = res.user;
+                    document.getElementById('loginScreen').style.display = 'none';
+                    if (currentUser.role === 'child') showChildDashboard(); else showParentDashboard();
+                } else document.getElementById('errorMsg').innerText = res.message;
+            }).login(id, pass);
+        }
+
+        function refreshUserData() {
+            google.script.run.withSuccessHandler(user => {
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('childPoints').innerText = currentUser.totalPoints;
+                }
+            }).getUserInfo(currentUser.userId);
+        }
+
+        function showChildDashboard() {
+            hideAll();
+            document.getElementById('childDashboard').style.display = 'block';
+            document.getElementById('childAvatar').innerText = currentUser.avatar;
+            document.getElementById('childName').innerText = 'Hello ' + currentUser.name + '!';
+            document.getElementById('childPoints').innerText = currentUser.totalPoints;
+        }
+
+        function showParentDashboard() { hideAll(); document.getElementById('parentDashboard').style.display = 'block'; loadPendingRequests(); loadChildrenOverview(); }
+
+        // --- Task Logic ---
+        function showTasksModal() {
+            google.script.run.withSuccessHandler(tasks => {
+                const list = document.getElementById('tasksList');
+                list.innerHTML = '';
+                tasks.forEach(task => {
+                    const div = document.createElement('div');
+                    div.className = 'item-card';
+                    div.innerHTML = `
+                        <div class="item-info"><strong>${task.icon} ${task.taskName}</strong><small>${task.category}</small></div>
+                        <div style="display:flex; align-items:center; gap:10px;"><span style="color:#28a745; font-weight:bold;">+${task.points}</span>
+                        <input type="checkbox" class="task-checkbox checkbox-large" value="${task.taskId}" onchange="toggleRequestBtn()"></div>`;
+                    list.appendChild(div);
+                });
+                hideAll(); document.getElementById('tasksModal').style.display = 'block';
+            }).getTasks();
+        }
+        function toggleRequestBtn() { document.getElementById('requestTasksBtn').style.display = document.querySelectorAll('.task-checkbox:checked').length > 0 ? 'flex' : 'none'; }
+        function submitMultipleTasks() {
+            const ids = Array.from(document.querySelectorAll('.task-checkbox:checked')).map(cb => cb.value);
+            if (confirm(`Request ${ids.length} tasks?`)) google.script.run.withSuccessHandler(res => { alert(res.message); backToDashboard(); }).requestMultipleTasks(currentUser.userId, ids);
+        }
+
+        // --- Rewards UI  ---
+        function showRewardsModal() {
+            google.script.run.withSuccessHandler(rewards => {
+                const list = document.getElementById('rewardsList');
+                list.innerHTML = '';
+                rewards.forEach(r => {
+                    const canClaim = currentUser.totalPoints >= r.requiredPoints;
+                    const div = document.createElement('div');
+                    div.className = 'item-card';
+                    div.innerHTML = `
+                        <div class="item-info">
+                            <strong>${r.icon} ${r.rewardName}</strong>
+                            <small>Need ${r.requiredPoints} points</small>
+                        </div>
+                        <button class="btn ${canClaim ? 'btn-success' : 'btn-purple'}" 
+                                style="width:120px; margin:0; font-size:13px; padding:8px 5px;" 
+                                onclick="${canClaim ? `handleClaim('${r.rewardId}')` : ''}" ${!canClaim ? 'disabled' : ''}>
+                            ${canClaim ? 'Claim!' : `Need ${r.requiredPoints - currentUser.totalPoints} more`}
+                        </button>`;
+                    list.appendChild(div);
+                });
+                hideAll(); document.getElementById('rewardsModal').style.display = 'block';
+            }).getRewards();
+        }
+
+        function handleClaim(id) {
+            if(!confirm('Claim this reward?')) return;
+            google.script.run.withSuccessHandler(res => {
+                alert(res.message);
+                if(res.success) {
+                    currentUser.totalPoints = res.newTotal; // อัปเดตค่าในตัวแปรทันที - Update the value in the variable immediately.
+                    showChildDashboard(); // วิ่งกลับไปหน้าหลักเพื่อโชว์คะแนนใหม่ - Back to the main page to see the new score.
+                }
+            }).claimReward(currentUser.userId, id);
+        }
+
+        // --- Admin Panel Logic ---
+        function loadPendingRequests() {
+            const list = document.getElementById('pendingList');
+            list.innerHTML = 'Loading...';
+            google.script.run.withSuccessHandler(reqs => {
+                list.innerHTML = (reqs && reqs.length) ? '' : '<p style="text-align:center; padding:10px;">No Pending Items</p>';
+                if(reqs) reqs.forEach(req => {
+                    const div = document.createElement('div');
+                    div.className = 'pending-item';
+                    div.innerHTML = `
+                        <div class="pending-header">
+                            <div><strong>${req.userAvatar} ${req.userName}</strong><br><small>${req.taskName}</small></div>
+                            <div style="color:#28a745; font-weight:bold; font-size:20px;">+${req.points}</div>
+                        </div>
+                        <div class="pending-actions">
+                            <input type="checkbox" class="approval-checkbox checkbox-large" data-row-index="${req.rowIndex}" onchange="updateSelectedCount()">
+                            <button class="btn btn-success" style="padding:8px; font-size:13px; margin:0;" onclick="approveSingle(${req.rowIndex}, '${req.userId}', ${req.points})">Approve</button>
+                            <button class="btn btn-danger" style="padding:8px; font-size:13px; margin:0;" onclick="rejectSingle(${req.rowIndex})">Reject</button>
+                        </div>`;
+                    list.appendChild(div);
+                });
+                updateSelectedCount();
+            }).getPendingRequests();
+        }
+
+        function approveSingle(idx, uId, pts) {
+            if(!confirm(`Approve ${pts} points?`)) return;
+            google.script.run.withSuccessHandler(res => {
+                if(res.success) { alert('Approved!'); loadPendingRequests(); loadChildrenOverview(); }
+            }).approvePoints(idx, uId, pts);
+        }
+
+        function rejectSingle(idx) {
+            if(!confirm('Reject this?')) return;
+            google.script.run.withSuccessHandler(res => {
+                if(res.success) { alert('Rejected!'); loadPendingRequests(); }
+            }).rejectPoints(idx);
+        }
+
+        function loadChildrenOverview() {
+            google.script.run.withSuccessHandler(children => {
+                const list = document.getElementById('childrenList');
+                list.innerHTML = '';
+                children.forEach(child => {
+                    const card = document.createElement('div');
+                    card.className = 'child-card';
+                    card.onclick = () => selectChildDetail(child);
+                    card.innerHTML = `<div style="font-size:35px;">${child.avatar}</div><strong>${child.name}</strong><br>${child.totalPoints} points`;
+                    list.appendChild(card);
+                    // ถ้ากำลังจัดการเด็กคนนี้อยู่ ให้รีเฟรชคะแนนในการ์ดจัดการด้วย - If you are currently managing this child, refresh their management card score.
+                    if (selectedChildId === child.userId) document.getElementById('manageChildPoints').innerText = child.totalPoints;
+                });
+            }).getAllChildren();
+        }
+
+        function selectChildDetail(child) {
+            selectedChildId = child.userId;
+            document.getElementById('childrenList').style.display = 'none';
+            document.getElementById('manageTitle').style.display = 'none';
+            document.getElementById('selectedChildInfo').style.display = 'block';
+            document.getElementById('manageChildName').innerText = 'Managing: ' + child.avatar + ' ' + child.name;
+            document.getElementById('manageChildPoints').innerText = child.totalPoints;
+        }
+
+        function handleDeductPoints() {
+            const pts = parseInt(document.getElementById('deductAmount').value);
+            const reason = document.getElementById('deductReason').value;
+            if (!pts || !reason) return alert('Enter score and reason');
+            google.script.run.withSuccessHandler(res => {
+                alert('Deduct Point Successfully!');
+                document.getElementById('manageChildPoints').innerText = res.newTotal;
+                document.getElementById('deductAmount').value = '';
+                document.getElementById('deductReason').value = '';
+                loadChildrenOverview(); // รีเฟรชคิวข้อมูลเด็กทั้งหมด - Refresh the queue for all child data.
+            }).deductPoints(selectedChildId, pts, reason);
+        }
+
+        // --- Helpers ---
+        function selectAllPending(s) { document.querySelectorAll('.approval-checkbox').forEach(c => c.checked = s); updateSelectedCount(); }
+        function updateSelectedCount() { const c = document.querySelectorAll('.approval-checkbox:checked').length; document.getElementById('selectedCountBadge').innerText = c; document.getElementById('approveBtn').disabled = c === 0; }
+        function approveSelectedRequests() {
+            const idxs = Array.from(document.querySelectorAll('.approval-checkbox:checked')).map(cb => parseInt(cb.dataset.rowIndex));
+            if (confirm(`Approve ${idxs.length} items?`)) google.script.run.withSuccessHandler(() => { alert('Success!'); loadPendingRequests(); loadChildrenOverview(); }).approveMultiplePoints(idxs);
+        }
+        function backToChildSelection() { selectedChildId = null; document.getElementById('childrenList').style.display = 'block'; document.getElementById('manageTitle').style.display = 'block'; document.getElementById('selectedChildInfo').style.display = 'none'; }
+        function hideAll() { document.querySelectorAll('.dashboard').forEach(d => d.style.display = 'none'); }
+        function backToDashboard() { if (currentUser.role === 'child') showChildDashboard(); else showParentDashboard(); }
+        function logout() { location.reload(); }
+        function showHistoryModal() { google.script.run.withSuccessHandler(h => { renderHistory(h); hideAll(); document.getElementById('historyModal').style.display = 'block'; }).getPointsHistory(currentUser.userId); }
+        function showChildHistoryAdmin() { google.script.run.withSuccessHandler(h => { renderHistory(h); hideAll(); document.getElementById('historyModal').style.display = 'block'; }).getPointsHistory(selectedChildId); }
+        function renderHistory(history) {
+            const list = document.getElementById('historyList');
+            list.innerHTML = (history && history.length) ? '' : '<p>No History</p>';
+            if(history) history.forEach(h => {
+                const div = document.createElement('div');
+                div.className = 'item-card';
+                div.innerHTML = `<div>${h.note}<br><small>${h.date}</small></div><div style="color:${h.points>0?'#28a745':'#dc3545'}">${h.points>0?'+':''}${h.points}</div>`;
+                list.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
