@@ -29,16 +29,21 @@ This project is a gamified approach to fostering discipline within the household
 * **Responsive UI:** Fully optimized for a seamless experience on both **Desktop and Mobile** devices.
 
 * **User Dashboard:**
+* 
 ![User Dashboard](screenshots/UserPage.png)
 
 * **Multi-Task Selection:**
+* 
 ![Multi-Task Selection](screenshots/User-SelectTaskPage.png)
 
 * **Dynamic Reward System:**
+* 
 ![Reward System](screenshots/User-RewardPage.png)
 
 * **Advanced Admin Panel:**
+* 
 ![Admin Panel](screenshots/AdminPanelPage.png)
+
 ---
 
 ## 🚀 Tech Stack
